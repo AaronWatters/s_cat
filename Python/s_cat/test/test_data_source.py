@@ -82,7 +82,7 @@ class TestByteSource(unittest.TestCase):
         self.assertEqual(some_bytes, b"x")
 
     def test_max_offset(self):
-        text = "x" * 10000
+        text = b"x" * 10000
         space = data_source.BytesSource(text)
         self.assertIsNone(space.get_bytes_from_ws_to_eof(initial_length=1, max_seek=2))
         self.assertIsNone(space.get_bytes_to_ws_or_eof(1, initial_length=1, max_length=2))
