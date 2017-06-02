@@ -19,7 +19,7 @@ class TestByteSource(unittest.TestCase):
     def test_space(self):
         space = data_source.BytesSource(b" ")
         one_bytes = space.get_bytes(0, 1, strict=True)
-        self.assertEqual(one_bytes, (' ', True))
+        self.assertEqual(one_bytes, (b' ', True))
         (no_bytes, at_eof) = space.get_bytes(1, 0, strict=True)
         self.assertEqual(no_bytes, b"")
         self.assertTrue(at_eof)
