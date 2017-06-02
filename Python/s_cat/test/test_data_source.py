@@ -15,6 +15,8 @@ class TestByteSource(unittest.TestCase):
         self.assertTrue(at_eof)
         with self.assertRaises(IndexError):
             empty.get_bytes(1, 1, strict=False)
+        self.assertIsNone(empty.get_bytes_from_ws_to_eof())
+        self.assertEquals(empty.get_bytes_to_ws_or_eof(0), b"")
 
     def test_space(self):
         space = data_source.BytesSource(b" ")
@@ -78,3 +80,10 @@ class TestByteSource(unittest.TestCase):
         self.assertEqual(some_bytes, b"a")
         some_bytes = space.get_bytes_to_ws_or_eof(422)
         self.assertEqual(some_bytes, b"x")
+
+    def test_not_implemented(self):
+        xxx = data_source.DataSource()
+        with self.assertRaises(NotImplementedError):
+            xxx.get_bytes(1,1)
+        with self.assertRaises(NotImplementedError):
+            xxx.length()
