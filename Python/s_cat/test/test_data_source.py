@@ -81,6 +81,12 @@ class TestByteSource(unittest.TestCase):
         some_bytes = space.get_bytes_to_ws_or_eof(422)
         self.assertEqual(some_bytes, b"x")
 
+    def test_max_offset(self):
+        text = "x" * 10000
+        space = data_source.BytesSource(text)
+        self.assertIsNone(space.get_bytes_from_ws_to_eof(initial_length=1, max_seek=2))
+        self.assertIsNone(space.get_bytes_to_ws_or_eof(1, initial_length=1, max_length=2))
+
     def test_not_implemented(self):
         xxx = data_source.DataSource()
         with self.assertRaises(NotImplementedError):
