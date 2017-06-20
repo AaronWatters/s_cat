@@ -100,7 +100,7 @@ class BytesSource(DataSource):
             raise IndexError("seek start past end of file.")
         if strict and end_seek > nbytes:
             return None
-        at_eof = (end_seek >= len(byte_data))
+        at_eof = (end_seek >= nbytes)
         return (byte_data[start_seek:end_seek], at_eof)
 
     def append(self, add_bytes):

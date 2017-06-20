@@ -4,6 +4,7 @@ from .. import file_source
 import tempfile
 
 class TestFileSource(test_data_source.TestByteSource):
+
     def get_source(self, byte_data, writeable=False):
         f = self.file
         f.write(byte_data)
@@ -17,3 +18,9 @@ class TestFileSource(test_data_source.TestByteSource):
         f = self.file
         if f and not f.closed:
             f.close()
+
+    def test_close(self):
+        xxx = self.get_source(b"")
+        xxx.close()
+        with self.assertRaises(IOError):
+            xxx.get_bytes(1, 1)
