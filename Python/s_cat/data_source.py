@@ -14,6 +14,8 @@ class DataSource:
     Abstract superclass: Interface to indexed byte resource.
     """
 
+    writeable = False
+
     def get_bytes(self, start_seek, length, strict=True):
         """
         Get length bytes from the resource starting at seek start_seek.
@@ -25,6 +27,10 @@ class DataSource:
         Raise IndexError if start_seek is past eof.
         """
         raise NotImplementedError("Implement at subclass")
+
+    def assertIsWriteable(self):
+        if not self.writeable:
+            raise ReadOnlyError("Byte source is not writeable.")
 
     def length(self):
         """
@@ -98,10 +104,10 @@ class BytesSource(DataSource):
         return (byte_data[start_seek:end_seek], at_eof)
 
     def append(self, add_bytes):
-        if not self.writeable:
-            raise ReadOnlyError("Byte source is not writeable.")
+        self.assertIsWriteable()
         seek = self.length()
         self.byte_data = self.byte_data + bytes(add_bytes)
+        return seek
 
     def length(self):
         return len(self.byte_data)

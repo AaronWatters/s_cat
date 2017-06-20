@@ -3,10 +3,11 @@ from .. import data_source
 
 class TestByteSource(unittest.TestCase):
 
-    
+    def get_source(self, *args, **kwargs):
+        return data_source.BytesSource(*args, **kwargs)
 
     def test_empty(self):
-        empty = data_source.BytesSource(b"")
+        empty = self.get_source(b"")
         none_bytes = empty.get_bytes(0, 1, strict=True)
         self.assertIsNone(none_bytes)
         (no_bytes, at_eof) = empty.get_bytes(0, 0, strict=True)
@@ -23,7 +24,7 @@ class TestByteSource(unittest.TestCase):
             empty.append(b"abc")
     
     def test_append(self):
-        s = data_source.BytesSource(b"", writeable=True)
+        s = self.get_source(b"", writeable=True)
         none_bytes = s.get_bytes(0, 1, strict=True)
         self.assertIsNone(none_bytes)
         s.append(b"1")
@@ -32,7 +33,7 @@ class TestByteSource(unittest.TestCase):
         self.assertTrue(eof)
 
     def test_space(self):
-        space = data_source.BytesSource(b" ")
+        space = self.get_source(b" ")
         one_bytes = space.get_bytes(0, 1, strict=True)
         self.assertEqual(one_bytes, (b' ', True))
         (no_bytes, at_eof) = space.get_bytes(1, 0, strict=True)
@@ -50,7 +51,7 @@ class TestByteSource(unittest.TestCase):
         self.assertEqual(no_bytes, b"")
 
     def test_saasb(self):
-        space = data_source.BytesSource(b" aa b")
+        space = self.get_source(b" aa b")
         two_bytes = space.get_bytes(2, 2, strict=True)
         self.assertEqual(two_bytes, (b'a ', False))
         (no_bytes, at_eof) = space.get_bytes(5, 0, strict=True)
@@ -73,7 +74,7 @@ class TestByteSource(unittest.TestCase):
         prefix = (b"a" * 99) + b" "
         suffix = (b"x" * 123)
         text = (prefix * 3) + suffix
-        space = data_source.BytesSource(text)
+        space = self.get_source(text)
         two_bytes = space.get_bytes(298, 3, strict=True)
         self.assertEqual(two_bytes, (b'a x', False))
         (no_bytes, at_eof) = space.get_bytes(len(text), 0, strict=True)
@@ -96,7 +97,7 @@ class TestByteSource(unittest.TestCase):
 
     def test_max_offset(self):
         text = b"x" * 10000
-        space = data_source.BytesSource(text)
+        space = self.get_source(text)
         self.assertIsNone(space.get_bytes_from_ws_to_eof(initial_length=1, max_seek=2))
         self.assertIsNone(space.get_bytes_to_ws_or_eof(1, initial_length=1, max_length=2))
 
