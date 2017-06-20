@@ -1,0 +1,65 @@
+
+
+<h1>Pseudo BNF</h1>
+
+<dl>
+    <dt> <i> s_cat </i> </dt>
+    <dd>
+        <i>empty</i> <br>
+        <i>pellets</i> <br>
+        <i>pellets</i> <i>W</i> <i>amends</i> <br/>
+    </dd>
+    <dt> <i> pellets </i> </dt>
+    <dd>
+        <i>pellet</i> <br>
+        <i>pellet</i> <i>W</i> <i>pellets</i> <br/>
+    </dd>
+    <dt> <i> pellet </i> </dt>
+    <dd>
+        <i> key </i> <i>W</i> <i>values</i> <i>W</i> <i>offsets</i> <br/>
+        <i> key </i> <i>W</i> <i>offsets</i>
+    </dd>
+    <dt> <i> key </i> </dt>
+    <dd>
+        <tt>N</tt> <i>number</i> <br>
+        <tt>S</tt> <i>integer_n</i> <i>W</i> <i>n_bytes</i> <br/>
+        <tt>C</tt> <i>key</i> <i>W</i> <i>key</i>
+    </dd>
+    <dt> <i> values </i> </dt>
+    <dd>
+        <i> deleted </i> <br/>
+        <i> reference </i> <br/>
+        <i> value </i> <br/>
+        <i> value </i> <i>W</i> <i> values </i>
+    </dd>
+    <dt> <i> deleted </i> </dt>
+    <dd>
+        <tt>D</tt>
+    </dd>
+    <dt> <i> reference </i> </dt>
+    <dd>
+        <tt>R</tt> <i>integer_n</i> <i>W</i> <i>n_bytes</i>
+    </dd>
+    <dt> <i> value </i> </dt>
+    <dd>
+        <tt>V</tt> <i>integer_n</i> <i>W</i> <i>n_bytes</i>
+    </dd>
+    <dt> <i> offsets </i> </dt>
+    <dd>
+        <tt>O</tt> <i>int</i> <br/>
+        <tt>O</tt> <i>int</i> <tt>-</tt> <i>skips</i>
+    </dd>
+    <dt> <i> skips </i> </dt>
+    <dd>
+        <i> pair </i> <br>
+        <i> pair </i> <tt>-</tt> <i> pair </i>
+    </dd>
+    <dt> <i> pair </i> </dt>
+    <dd>
+        <i>int</i> <tt>:</tt> <i>int</i>
+    </dd>
+    <dt> <i> amends </i> </dt>
+    <dd>
+        <tt>&gt;</tt> <i>non_white_bytes</i>
+    </dd>
+</dl>

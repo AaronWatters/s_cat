@@ -3,6 +3,8 @@ from .. import data_source
 
 class TestByteSource(unittest.TestCase):
 
+    
+
     def test_empty(self):
         empty = data_source.BytesSource(b"")
         none_bytes = empty.get_bytes(0, 1, strict=True)
@@ -17,6 +19,17 @@ class TestByteSource(unittest.TestCase):
             empty.get_bytes(1, 1, strict=False)
         self.assertIsNone(empty.get_bytes_from_ws_to_eof())
         self.assertEquals(empty.get_bytes_to_ws_or_eof(0), b"")
+        with self.assertRaises(data_source.ReadOnlyError):
+            empty.append(b"abc")
+    
+    def test_append(self):
+        s = data_source.BytesSource(b"", writeable=True)
+        none_bytes = s.get_bytes(0, 1, strict=True)
+        self.assertIsNone(none_bytes)
+        s.append(b"1")
+        (one_byte, eof) = s.get_bytes(0, 1, strict=True)
+        self.assertEqual(one_byte, b"1")
+        self.assertTrue(eof)
 
     def test_space(self):
         space = data_source.BytesSource(b" ")
@@ -87,9 +100,13 @@ class TestByteSource(unittest.TestCase):
         self.assertIsNone(space.get_bytes_from_ws_to_eof(initial_length=1, max_seek=2))
         self.assertIsNone(space.get_bytes_to_ws_or_eof(1, initial_length=1, max_length=2))
 
+class TestDataSource(unittest.TestCase):
+
     def test_not_implemented(self):
         xxx = data_source.DataSource()
         with self.assertRaises(NotImplementedError):
             xxx.get_bytes(1,1)
         with self.assertRaises(NotImplementedError):
             xxx.length()
+        with self.assertRaises(data_source.ReadOnlyError):
+            xxx.append(b"xxx")

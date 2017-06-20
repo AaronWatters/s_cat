@@ -4,6 +4,10 @@ import re
 ws_re = br"\s"
 ws_pattern = re.compile(ws_re)
 
+class ReadOnlyError(IOError):
+    "Object is read only: mutation not permitted"
+    pass
+
 class DataSource:
 
     """
@@ -27,6 +31,12 @@ class DataSource:
         Return last index of data source
         """
         raise NotImplementedError("Implement at subclass")
+
+    def append(self, add_bytes):
+        """
+        Add bytes to end of data and return initial seek position.
+        """
+        raise ReadOnlyError("Operation not implemented.")
 
     def get_bytes_from_ws_to_eof(self, initial_length=128, max_seek=1000000):
         """
@@ -72,8 +82,9 @@ class DataSource:
 
 class BytesSource(DataSource):
 
-    def __init__(self, byte_data):
+    def __init__(self, byte_data, writeable=False):
         self.byte_data = bytes(byte_data)
+        self.writeable = writeable
 
     def get_bytes(self, start_seek, length, strict=True):
         end_seek = start_seek + length
@@ -85,6 +96,12 @@ class BytesSource(DataSource):
             return None
         at_eof = (end_seek >= len(byte_data))
         return (byte_data[start_seek:end_seek], at_eof)
+
+    def append(self, add_bytes):
+        if not self.writeable:
+            raise ReadOnlyError("Byte source is not writeable.")
+        seek = self.length()
+        self.byte_data = self.byte_data + bytes(add_bytes)
 
     def length(self):
         return len(self.byte_data)
