@@ -98,7 +98,7 @@ class CompositeKey(Key):
     def to_bytes(self):
         byt1 = self.key1.to_bytes()
         byt2 = self.key2.to_bytes()
-        return b"C\n%s\n%s" % (byt1, byt2)
+        return b"\n".join([b"C", byt1, byt2])
 
 class_order = [NumberKey, StringKey, CompositeKey]
 
