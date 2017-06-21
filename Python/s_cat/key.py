@@ -48,7 +48,7 @@ class NumberKey(Key):
         return self.number
 
     def to_bytes(self):
-        return b"N " + bytes(str(self.number))
+        return b"N " + unicode_(self.number).encode("ascii")
 
 
 class StringKey(Key):
@@ -72,7 +72,8 @@ class StringKey(Key):
     def to_bytes(self):
         byt = self.string.encode("utf8")
         length = len(byt)
-        return b"S " + bytes(length) + b"\n" + byt
+        blength = unicode_(length).encode("ascii")
+        return b"S " + blength + b"\n" + byt
 
 
 class CompositeKey(Key):
