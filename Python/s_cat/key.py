@@ -48,7 +48,7 @@ class NumberKey(Key):
         return self.number
 
     def to_bytes(self):
-        return b"N " + unicode_(self.number).encode("ascii")
+        return b"N" + unicode_(self.number).encode("ascii")
 
 
 class StringKey(Key):
@@ -73,7 +73,7 @@ class StringKey(Key):
         byt = self.string.encode("utf8")
         length = len(byt)
         blength = unicode_(length).encode("ascii")
-        return b"S " + blength + b"\n" + byt
+        return b"S" + blength + b"\n" + byt
 
 
 class CompositeKey(Key):
@@ -106,3 +106,8 @@ def class_cmp(class1, class2):
     index1 = class_order.index(class1)
     index2 = class_order.index(class2)
     return index1 - index2
+
+def from_bytes(encoded_bytes):
+    "Decode a key from a byte sequence."
+    assert len(encoded_bytes) > 2
+

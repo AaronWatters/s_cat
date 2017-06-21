@@ -22,7 +22,7 @@ class TestNumberKey(unittest.TestCase):
     def test_lt(self):
         n1 = key.NumberKey(1)
         self.assertEqual(n1.value(), 1)
-        self.assertEqual(n1.to_bytes(), b"N 1")
+        self.assertEqual(n1.to_bytes(), b"N1")
         n2 = key.NumberKey(1 + 1e-10)
         self.assertTrue(n1 < n2)
         self.assertFalse(n2 < n1)
@@ -55,7 +55,7 @@ class TestStringKey(unittest.TestCase):
     def test_to_bytes(self):
         s1 = key.StringKey("Äijö")
         byt = s1.to_bytes()
-        self.assertEqual(b"S 6\n\xc3\x84ij\xc3\xb6", byt)
+        self.assertEqual(b"S6\n\xc3\x84ij\xc3\xb6", byt)
 
 class TestCompositeKey(unittest.TestCase):
 
@@ -86,4 +86,4 @@ class TestCompositeKey(unittest.TestCase):
         n2 = key.NumberKey(10)
         c1 = key.CompositeKey(n2, s1)
         byt = c1.to_bytes()
-        self.assertEqual(b'C\nN 10\nS 6\n\xc3\x84ij\xc3\xb6', byt)
+        self.assertEqual(b'C\nN10\nS6\n\xc3\x84ij\xc3\xb6', byt)
