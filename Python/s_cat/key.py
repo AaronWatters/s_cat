@@ -1,4 +1,12 @@
 
+
+# py3 hack
+try:
+    unicode_ = unicode
+except NameError:
+    unicode_ = str
+
+
 class Key(object):
 
     "Abstract superclass: an index key."
@@ -50,9 +58,9 @@ class StringKey(Key):
     def __init__(self, string):
         ts = type(string)
         if ts is bytes:
-            string = unicode(string, "utf8")
+            string = unicode_(string, "utf8")
             ts = type(string)
-        assert ts is unicode
+        assert ts is unicode_
         self.string = string
 
     def less_than(self, other):
