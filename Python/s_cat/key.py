@@ -48,7 +48,7 @@ class NumberKey(Key):
         return self.number
 
     def to_bytes(self):
-        return b"N " + bytes(self.number)
+        return b"N " + bytes(str(self.number))
 
 
 class StringKey(Key):
