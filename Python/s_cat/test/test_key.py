@@ -222,6 +222,13 @@ class TestFromBytesSpec(unittest.TestCase):
         self.assertEqual(from_bytes.value(), longer)
         self.assertEqual(end, 100013)
 
+    def test_short_composite(self):
+        encoded = b"0123 C S1 a N5.7 xxx"
+        (from_bytes, end) = key.key_from_bytes(encoded, 5)
+        self.assertIsInstance(from_bytes, key.CompositeKey)
+        self.assertEqual(from_bytes.value(), (u"a", 5.7))
+        self.assertEqual(end, 17)
+
     def test_exceptions(self):
         with self.assertRaises(key.FormatError):
             dummy = key.key_from_bytes("S-4 xxx")
