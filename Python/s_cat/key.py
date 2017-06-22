@@ -146,7 +146,7 @@ def white_delimited_number(encoded_bytes, start=0, max_length=20):
         return (float(chunk), end)
 
 def white_delimited(encoded_bytes, start=0, max_length=20):
-    "find ascii segment of bytes from start to first whitespace or end of bytes or None"
+    "find utf8 segment of bytes from start to first whitespace or end of bytes or None"
     white_match = data_source.ws_pattern.search(encoded_bytes, start, start + max_length)
     segment = end = None
     if white_match is not None:
@@ -158,6 +158,8 @@ def white_delimited(encoded_bytes, start=0, max_length=20):
         if (start < b_len) and (b_len - start) <= max_length:
             segment = encoded_bytes[start:]
             end = b_len
+    print("segment before " + repr((unicode_, segment)))
     if segment is not None:
-        segment = unicode_(segment)
+        segment = unicode_(segment, "utf8")
+    print("segment is " + repr(segment))
     return (segment, end)
