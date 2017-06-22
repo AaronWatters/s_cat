@@ -1,10 +1,16 @@
 
+from . import data_source
 
 # py3 hack
-try:
+try:   # pragma: no cover
     unicode_ = unicode
 except NameError:
     unicode_ = str
+
+
+class FormatError(ValueError):
+    "Byte sequence is not recognized."
+    pass
 
 
 class Key(object):
@@ -107,7 +113,51 @@ def class_cmp(class1, class2):
     index2 = class_order.index(class2)
     return index1 - index2
 
-def from_bytes(encoded_bytes):
-    "Decode a key from a byte sequence."
-    assert len(encoded_bytes) > 2
+def key_from_bytes(encoded_bytes, start=0):
+    "Decode a key from a byte sequence prefix. Return (key, end_index)."
+    nbytes = len(encoded_bytes)
+    assert nbytes >= start + 2
+    indicator = encoded_bytes[0]
+    if indicator == "N":
+        # parse a number
+        pass
+    elif indicator == "S":
+        # parse a string
+        pass
+    elif indicator == "C":
+        # parse a composite
+        pass
+    else:
+        raise FormatError("unknown indicator " + repr(indicator))
 
+def white_delimited_int(encoded_bytes, start=0, max_length=20):
+    (chunk, end) = white_delimited(encoded_bytes, start, max_length=20)
+    if chunk is None:
+        raise FormatError("white delimited chunk not found")
+    return (int(chunk), end)
+
+def white_delimited_number(encoded_bytes, start=0, max_length=20):
+    (chunk, end) = white_delimited(encoded_bytes, start, max_length=20)
+    if chunk is None:
+        raise FormatError("white delimited chunk not found")
+    try:
+        return (int(chunk), end)
+    except ValueError:
+        return (float(chunk), end)
+
+def white_delimited(encoded_bytes, start=0, max_length=20):
+    "find ascii segment of bytes from start to first whitespace or end of bytes or None"
+    white_match = data_source.ws_pattern.search(encoded_bytes, start, start + max_length)
+    segment = end = None
+    if white_match is not None:
+        ws_index = white_match.start()
+        segment = encoded_bytes[start: ws_index]
+        end = ws_index + 1
+    else:
+        b_len = len(encoded_bytes)
+        if (start < b_len) and (b_len - start) <= max_length:
+            segment = encoded_bytes[start:]
+            end = b_len
+    if segment is not None:
+        segment = unicode_(segment)
+    return (segment, end)

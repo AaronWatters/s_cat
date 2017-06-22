@@ -3,6 +3,61 @@
 import unittest
 from .. import key
 
+class TestWhiteDelimited(unittest.TestCase):
+
+    def test_basic(self):
+        test_bytes = b'012 45 789'
+        test012 = key.white_delimited(test_bytes)
+        self.assertEqual((u'012', 4), test012)
+        test45 = key.white_delimited(test_bytes, 4)
+        self.assertEqual((u'45', 7), test45)
+        test789 = key.white_delimited(test_bytes, 7)
+        self.assertEqual((u'789', 10), test789)
+        test_none = key.white_delimited(test_bytes, 10)
+        none_none = (None, None)
+        self.assertEqual(test_none, none_none)
+        too_big = b'x' * 100
+        test_none = key.white_delimited(too_big)
+        self.assertEqual(test_none, none_none)
+
+class TestWhiteDelimitedInt(unittest.TestCase):
+
+    def test_basic(self):
+        test_bytes = b'012 45 789'
+        test_bytes2 = b'0.2 45 7.9'
+        test012 = key.white_delimited_int(test_bytes)
+        self.assertEqual((12, 4), test012)
+        with self.assertRaises(ValueError):
+            test012 = key.white_delimited_int(test_bytes2)
+        test45 = key.white_delimited_int(test_bytes, 4)
+        self.assertEqual((45, 7), test45)
+        test789 = key.white_delimited_int(test_bytes, 7)
+        self.assertEqual((789, 10), test789)
+        with self.assertRaises(ValueError):
+            test_none = key.white_delimited_int(test_bytes, 10)
+        too_big = b'x' * 100
+        with self.assertRaises(ValueError):
+            test_none = key.white_delimited_int(too_big)
+
+class TestWhiteDelimitedNumber(unittest.TestCase):
+
+    def test_basic(self):
+        test_bytes = b'012 45 7.9'
+        test_bytes2 = b'012 45 7.x'
+        test012 = key.white_delimited_number(test_bytes)
+        self.assertEqual((12, 4), test012)
+        test45 = key.white_delimited_number(test_bytes, 4)
+        self.assertEqual((45, 7), test45)
+        test789 = key.white_delimited_number(test_bytes, 7)
+        self.assertEqual((7.9, 10), test789)
+        with self.assertRaises(ValueError):
+            test789 = key.white_delimited_number(test_bytes2, 7)
+        with self.assertRaises(ValueError):
+            test_none = key.white_delimited_number(test_bytes, 10)
+        too_big = b'x' * 100
+        with self.assertRaises(ValueError):
+            test_none = key.white_delimited_int(too_big)
+
 class TestKeySuperClass(unittest.TestCase):
 
     def test_not_implemented(self):
