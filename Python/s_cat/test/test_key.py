@@ -221,3 +221,10 @@ class TestFromBytesSpec(unittest.TestCase):
         self.assertTrue(isinstance(from_bytes, key.StringKey))
         self.assertEqual(from_bytes.value(), longer)
         self.assertEqual(end, 100013)
+
+    def test_exceptions(self):
+        with self.assertRaises(key.FormatError):
+            dummy = key.key_from_bytes("S-4 xxx")
+        with self.assertRaises(key.FormatError):
+            dummy = key.key_from_bytes("Y3 xxx")
+
