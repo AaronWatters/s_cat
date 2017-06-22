@@ -2,6 +2,7 @@
 
 import unittest
 from .. import value
+from .. import key
 
 class TestValues(unittest.TestCase):
 
@@ -16,6 +17,10 @@ class TestValues(unittest.TestCase):
         for x in seq:
             dummy.add_bytes(x)
         self.assertEqual(dummy.sequence, seq)
+        with self.assertRaises(key.FormatError):
+            dummy = value.value_from_bytes("XXX")
+        with self.assertRaises(key.FormatError):
+            dummy = value.values_from_bytes("XXX")
 
     def test_parse_delete(self):
         encoded = b"012D 5678"
