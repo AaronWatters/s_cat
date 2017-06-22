@@ -90,7 +90,41 @@ class TestNumberKey(unittest.TestCase):
         srt = list(sorted([s1,n1,c1,n2]))
         self.assertEqual([n1, n2, s1, c1], srt)
 
+    def test_parse(self):
+        n = key.NumberKey(1012)
+        to_bytes = n.to_bytes()
+        (from_bytes, end) = key.key_from_bytes(to_bytes)
+        self.assertEqual(from_bytes.value(), 1012)
+        self.assertEqual(end, len(to_bytes))
+        padded = b"0123" + to_bytes + b" 56"
+        (from_bytes, end) = key.key_from_bytes(padded, 4)
+        self.assertEqual(from_bytes.value(), 1012)
+        # end index includes white space separator.
+        self.assertEqual(end, 4 + len(to_bytes) + 1)
+        n_float = key.NumberKey(123e-12)
+        to_bytes_float = n_float.to_bytes()
+        (from_bytes_float, end_float) = key.key_from_bytes(to_bytes_float)
+        self.assertEqual(from_bytes_float.value(), 123e-12)
+        self.assertEqual(end_float, len(to_bytes_float))
+
 class TestStringKey(unittest.TestCase):
+
+    def test_parse(self):
+        s = key.StringKey("Äijö")
+        #s = key.StringKey("abcd")
+        to_bytes = s.to_bytes()
+        (from_bytes, end) = key.key_from_bytes(to_bytes)
+        #self.assertEqual(from_bytes.value(), "abcd"); return
+        self.assertEqual(from_bytes.value(), u"Äijö")
+        self.assertEqual(end, len(to_bytes))
+        padded = b"0123" + to_bytes + b" 56"
+        (from_bytes, end) = key.key_from_bytes(padded, 4)
+        self.assertEqual(from_bytes.value(), u"Äijö")
+        # end index includes white space separator.
+        self.assertEqual(end, 4 + len(to_bytes) + 1)
+        padded_wrong = b"0123" + to_bytes + b"x56"
+        with self.assertRaises(key.FormatError):
+            dummy = key.key_from_bytes(padded_wrong, 4)
 
     def test_lt(self):
         s1 = key.StringKey("abc")
@@ -113,6 +147,18 @@ class TestStringKey(unittest.TestCase):
         self.assertEqual(b"S6\n\xc3\x84ij\xc3\xb6", byt)
 
 class TestCompositeKey(unittest.TestCase):
+
+    def test_parse(self):
+        s1 = key.StringKey("abc")
+        n1 = key.NumberKey(1)
+        c1 = key.CompositeKey(s1, n1)
+        to_bytes = c1.to_bytes()
+        (from_bytes, end) = key.key_from_bytes(to_bytes)
+        self.assertEqual(from_bytes.value(), (u"abc", 1))
+        self.assertEqual(end, len(to_bytes))
+        padded = b"0123" + to_bytes + b" 56"
+        (from_bytes, end) = key.key_from_bytes(padded, 4)
+        self.assertEqual(from_bytes.value(), ("abc", 1))
 
     def test_lt(self):
         s1 = key.StringKey("abc")
@@ -142,3 +188,36 @@ class TestCompositeKey(unittest.TestCase):
         c1 = key.CompositeKey(n2, s1)
         byt = c1.to_bytes()
         self.assertEqual(b'C\nN10\nS6\n\xc3\x84ij\xc3\xb6', byt)
+
+
+class TestFromBytesSpec(unittest.TestCase):
+
+    def test_int(self):
+        encoded = b"012 N567 90"
+        (from_bytes, end) = key.key_from_bytes(encoded, 4)
+        self.assertTrue(isinstance(from_bytes, key.NumberKey))
+        self.assertEqual(from_bytes.value(), 567)
+        self.assertEqual(end, 9)
+
+    def test_float(self):
+        encoded = b"012 N5.7 90"
+        (from_bytes, end) = key.key_from_bytes(encoded, 4)
+        self.assertTrue(isinstance(from_bytes, key.NumberKey))
+        self.assertEqual(from_bytes.value(), 5.7)
+        self.assertEqual(end, 9)
+
+    def test_short_string(self):
+        encoded = b"012 S1 a 9012"
+        (from_bytes, end) = key.key_from_bytes(encoded, 4)
+        self.assertTrue(isinstance(from_bytes, key.StringKey))
+        self.assertEqual(from_bytes.value(), u"a")
+        self.assertEqual(end, 9)
+
+    def test_longer_string(self):
+        longer_bytes = b"X" * 100000
+        longer = u"X" * 100000
+        encoded = b"012 S100000 " + longer_bytes + b" 9012"
+        (from_bytes, end) = key.key_from_bytes(encoded, 4)
+        self.assertTrue(isinstance(from_bytes, key.StringKey))
+        self.assertEqual(from_bytes.value(), longer)
+        self.assertEqual(end, 100013)

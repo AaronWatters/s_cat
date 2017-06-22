@@ -78,8 +78,9 @@ class StringKey(Key):
     def to_bytes(self):
         byt = self.string.encode("utf8")
         length = len(byt)
-        blength = unicode_(length).encode("ascii")
-        return b"S" + blength + b"\n" + byt
+        blength = unicode_(length).encode("utf8")
+        result = b"S" + blength + b"\n" + byt
+        return result
 
 
 class CompositeKey(Key):
@@ -115,20 +116,43 @@ def class_cmp(class1, class2):
 
 def key_from_bytes(encoded_bytes, start=0):
     "Decode a key from a byte sequence prefix. Return (key, end_index)."
+    key = end = None
     nbytes = len(encoded_bytes)
     assert nbytes >= start + 2
-    indicator = encoded_bytes[0]
-    if indicator == "N":
+    indicator = encoded_bytes[start:start + 1]
+    if indicator == b"N":
         # parse a number
-        pass
-    elif indicator == "S":
+        (number, end) = white_delimited_number(encoded_bytes, start+1)
+        key = NumberKey(number)
+    elif indicator == b"S":
         # parse a string
-        pass
-    elif indicator == "C":
+        (length, len_end) = white_delimited_int(encoded_bytes, start+1)
+        end = len_end + length
+        if (length < 0) or (end > nbytes):
+            raise FormatError("invalid length " + repr((length, len_end, nbytes)))
+        chunk = encoded_bytes[len_end:end]
+        #print "chunk", map(ord, chunk)
+        uni_str = unicode_(chunk, "utf8")
+        #print "string out", uni_str
+        key = StringKey(uni_str)
+        # also consume the white delimiter if available
+        if end < nbytes:
+            assert_is_white(encoded_bytes, end)
+            end = end + 1
+    elif indicator == b"C":
         # parse a composite
-        pass
+        assert_is_white(encoded_bytes, start+1)
+        (key1, end1) = key_from_bytes(encoded_bytes, start+2)
+        (key2, end) = key_from_bytes(encoded_bytes, end1)
+        key = CompositeKey(key1, key2)
     else:
         raise FormatError("unknown indicator " + repr(indicator))
+    return (key, end)
+
+def assert_is_white(encoded_bytes, index):
+    match = data_source.ws_pattern.match(encoded_bytes, index)
+    if match is None:
+        raise FormatError("Expected whitepace not found.")
 
 def white_delimited_int(encoded_bytes, start=0, max_length=20):
     (chunk, end) = white_delimited(encoded_bytes, start, max_length=20)
@@ -158,8 +182,6 @@ def white_delimited(encoded_bytes, start=0, max_length=20):
         if (start < b_len) and (b_len - start) <= max_length:
             segment = encoded_bytes[start:]
             end = b_len
-    print("segment before " + repr((unicode_, segment)))
     if segment is not None:
         segment = unicode_(segment, "utf8")
-    print("segment is " + repr(segment))
     return (segment, end)
