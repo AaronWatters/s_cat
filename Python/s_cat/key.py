@@ -146,7 +146,7 @@ def key_from_bytes(encoded_bytes, start=0):
         (key2, end) = key_from_bytes(encoded_bytes, end1)
         key = CompositeKey(key1, key2)
     else:
-        raise FormatError("unknown indicator " + repr(indicator))
+        raise FormatError("unknown key indicator " + repr(indicator))
     return (key, end)
 
 def assert_is_white(encoded_bytes, index):
