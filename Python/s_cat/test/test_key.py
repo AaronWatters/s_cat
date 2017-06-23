@@ -90,6 +90,13 @@ class TestNumberKey(unittest.TestCase):
         srt = list(sorted([s1,n1,c1,n2]))
         self.assertEqual([n1, n2, s1, c1], srt)
 
+    def test_eq(self):
+        n1 = key.NumberKey(1)
+        n1prime = key.NumberKey(1)
+        n2 = key.NumberKey(2)
+        self.assertTrue(n1 == n1prime)
+        self.assertFalse(n1 == n2)
+
     def test_parse(self):
         n = key.NumberKey(1012)
         to_bytes = n.to_bytes()

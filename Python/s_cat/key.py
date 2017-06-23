@@ -33,6 +33,9 @@ class Key(object):
             return False
         return self.less_than(other)
 
+    def __eq__(self, other):
+        return self.value() == other.value()
+
     def value(self):
         return None
 
@@ -44,6 +47,8 @@ class NumberKey(Key):
 
     "An index key containing a number."
 
+    INDICATOR = b'N'
+
     def __init__(self, number):
         self.number = number
 
@@ -54,12 +59,14 @@ class NumberKey(Key):
         return self.number
 
     def to_bytes(self):
-        return b"N" + unicode_(self.number).encode("ascii")
+        return self.INDICATOR + unicode_(self.number).encode("ascii")
 
 
 class StringKey(Key):
 
     "An index key containing a string."
+
+    INDICATOR = b'S'
 
     def __init__(self, string):
         ts = type(string)
@@ -79,13 +86,16 @@ class StringKey(Key):
         byt = self.string.encode("utf8")
         length = len(byt)
         blength = unicode_(length).encode("utf8")
-        result = b"S" + blength + b"\n" + byt
+        result = self.INDICATOR + blength + b"\n" + byt
         return result
 
 
 class CompositeKey(Key):
 
     "An index key containing a two component keys (list cons)."
+
+    INDICATOR = b'C'
+
     def __init__(self, key1, key2):
         assert isinstance(key1, Key)
         assert isinstance(key2, Key)
@@ -105,7 +115,7 @@ class CompositeKey(Key):
     def to_bytes(self):
         byt1 = self.key1.to_bytes()
         byt2 = self.key2.to_bytes()
-        return b"\n".join([b"C", byt1, byt2])
+        return b"\n".join([self.INDICATOR, byt1, byt2])
 
 class_order = [NumberKey, StringKey, CompositeKey]
 
@@ -120,11 +130,11 @@ def key_from_bytes(encoded_bytes, start=0):
     nbytes = len(encoded_bytes)
     assert nbytes >= start + 2
     indicator = encoded_bytes[start:start + 1]
-    if indicator == b"N":
+    if indicator == NumberKey.INDICATOR:  # b"N":
         # parse a number
         (number, end) = white_delimited_number(encoded_bytes, start+1)
         key = NumberKey(number)
-    elif indicator == b"S":
+    elif indicator == StringKey.INDICATOR:  # b"S":
         # parse a string
         (length, len_end) = white_delimited_int(encoded_bytes, start+1)
         end = len_end + length
@@ -139,7 +149,7 @@ def key_from_bytes(encoded_bytes, start=0):
         if end < nbytes:
             assert_is_white(encoded_bytes, end)
             end = end + 1
-    elif indicator == b"C":
+    elif indicator == CompositeKey.INDICATOR:  # b"C":
         # parse a composite
         assert_is_white(encoded_bytes, start+1)
         (key1, end1) = key_from_bytes(encoded_bytes, start+2)
