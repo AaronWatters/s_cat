@@ -22,7 +22,7 @@ class Key(object):
         raise NotImplementedError("Implement at subclass")
 
     def to_bytes(self):
-        "compare self to other of same kind."
+        "representation as byte sequence."
         raise NotImplementedError("Implement at subclass")
 
     def __lt__(self, other):
@@ -154,6 +154,38 @@ def key_from_bytes(encoded_bytes, start=0):
         assert_is_white(encoded_bytes, start+1)
         (key1, end1) = key_from_bytes(encoded_bytes, start+2)
         (key2, end) = key_from_bytes(encoded_bytes, end1)
+        key = CompositeKey(key1, key2)
+    else:
+        raise FormatError("unknown key indicator " + repr(indicator))
+    return (key, end)
+
+def key_from_data_source_seek(data_source, seek):
+    key = end = None
+    first_chunk = data_source.get_bytes_to_ws_or_eof(seek)
+    indicator = first_chunk[0]
+    next_seek = seek + len(first_chunk) + 1  # skip ws
+    if indicator == NumberKey.INDICATOR:  # b"N":
+        # parse a number
+        (number, num_end) = white_delimited_number(first_chunk, 1)
+        key = NumberKey(number)
+        end = next_seek
+    elif indicator == StringKey.INDICATOR:  # b"S":
+        # parse a string
+        (length, len_end) = white_delimited_int(first_chunk, 1)
+        if (length < 0):
+            raise FormatError("invalid length " + repr((length, len_end)))
+        (chunk, at_eof) = data_source.get_bytes(next_seek, length+1)  # include ws at tail
+        #print "chunk", map(ord, chunk)
+        uni_str = unicode_(chunk[:-1], "utf8")  # exclude ws
+        #print "string out", uni_str
+        key = StringKey(uni_str)
+        end = next_seek + len(chunk)  # include ws
+        assert_is_white(chunk[-1], 0)
+    elif indicator == CompositeKey.INDICATOR:  # b"C":
+        # parse a composite
+        assert len(first_chunk) == 1
+        (key1, end1) = key_from_data_source_seek(data_source, next_seek)
+        (key2, end) = key_from_data_source_seek(data_source, end1)
         key = CompositeKey(key1, key2)
     else:
         raise FormatError("unknown key indicator " + repr(indicator))
