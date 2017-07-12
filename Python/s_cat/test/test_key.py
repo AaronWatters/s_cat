@@ -2,6 +2,7 @@
 
 import unittest
 from .. import key
+from .. import data_source
 
 class TestWhiteDelimited(unittest.TestCase):
 
@@ -114,6 +115,19 @@ class TestNumberKey(unittest.TestCase):
         self.assertEqual(from_bytes_float.value(), 123e-12)
         self.assertEqual(end_float, len(to_bytes_float))
 
+    def test_from_data_source(self, byte_data=b"N23.45e10 ", seek=0):
+        s = data_source.BytesSource(byte_data)
+        (k, end) = key.key_from_data_source_seek(s, seek)
+        self.assertIsInstance(k, key.NumberKey)
+        self.assertEqual(k.value(), 23.45e10)
+        self.assertEqual(end, len(byte_data))
+        embedded_bytes = b"XXX" + byte_data + b"YYYY"
+        se = data_source.BytesSource(embedded_bytes)
+        (ke, end_e) = key.key_from_data_source_seek(se, seek+3)
+        self.assertIsInstance(ke, key.NumberKey)
+        self.assertEqual(ke.value(), 23.45e10)
+        self.assertEqual(end_e, len(byte_data) + 3)
+
 class TestStringKey(unittest.TestCase):
 
     def test_parse(self):
@@ -152,6 +166,23 @@ class TestStringKey(unittest.TestCase):
         s1 = key.StringKey("Äijö")
         byt = s1.to_bytes()
         self.assertEqual(b"S6\n\xc3\x84ij\xc3\xb6", byt)
+
+    def test_from_data_source(self, byte_data=b"S3 abc ", seek=0):
+        s = data_source.BytesSource(byte_data)
+        (k, end) = key.key_from_data_source_seek(s, seek)
+        self.assertIsInstance(k, key.StringKey)
+        self.assertEqual(k.value(), u"abc")
+        self.assertEqual(end, len(byte_data))
+        embedded_bytes = b"XXX" + byte_data + b"YYYY"
+        se = data_source.BytesSource(embedded_bytes)
+        (ke, end_e) = key.key_from_data_source_seek(se, seek+3)
+        self.assertIsInstance(ke, key.StringKey)
+        self.assertEqual(ke.value(), u"abc")
+        self.assertEqual(end_e, len(byte_data) + 3)
+        s = data_source.BytesSource(b"S-13 abcdefghi ")
+        with self.assertRaises(key.FormatError):
+            (k, end) = key.key_from_data_source_seek(s, 0)
+
 
 class TestCompositeKey(unittest.TestCase):
 
@@ -195,6 +226,19 @@ class TestCompositeKey(unittest.TestCase):
         c1 = key.CompositeKey(n2, s1)
         byt = c1.to_bytes()
         self.assertEqual(b'C\nN10\nS6\n\xc3\x84ij\xc3\xb6', byt)
+
+    def test_from_data_source(self, byte_data=b"C S3 abc N43 ", seek=0):
+        s = data_source.BytesSource(byte_data)
+        (k, end) = key.key_from_data_source_seek(s, seek)
+        self.assertIsInstance(k, key.CompositeKey)
+        self.assertEqual(k.value(), (u"abc", 43))
+        self.assertEqual(end, len(byte_data))
+        embedded_bytes = b"XXX" + byte_data + b"YYYY"
+        se = data_source.BytesSource(embedded_bytes)
+        (ke, end_e) = key.key_from_data_source_seek(se, seek+3)
+        self.assertIsInstance(ke, key.CompositeKey)
+        self.assertEqual(ke.value(), (u"abc", 43))
+        self.assertEqual(end_e, len(byte_data) + 3)
 
 
 class TestFromBytesSpec(unittest.TestCase):
